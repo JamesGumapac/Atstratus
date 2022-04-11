@@ -3,25 +3,421 @@
  * @NScriptType Suitelet
  */
 const PROPERTYSEARCHPARENT = 'customsearch_ats_cogsreport_property'
+const STATISTICSEARCH = 'customsearch_ats_sum_stat_actual'
+const REVENUESEARCH = 'customsearch_ats_sum_stat_actual'
+const EXPENSESEARCH = 'customsearch_ats_sum_stat_actual'
 const REPORTTYPE = ['ALL', 'STATISTIC', 'REVENUE', 'EXPENSE']
 
 //CONSTS Declaration
 
-define(['N/ui/serverWidget', 'N/search', 'N/redirect', 'N/render', 'N/file', 'N/https', 'N/runtime'],
-    function (serverWidget, search, redirect, render, file, https, runtime) {
+define(['N/ui/serverWidget', 'N/search', 'N/redirect', 'N/render', 'N/file', 'N/https', 'N/runtime', 'N/record'],
+    function (serverWidget, search, redirect, render, file, https, runtime, record) {
         function onRequest(context) {
             var objResponse = context.response;
             if (context.request.method == 'GET') {
 
-                if (context.request.parameters.generateExcel) {
-                    var fileHolderGenerated = file.load({
-                        id: 246683
+                if (context.request.parameters.searchFilter) {
+                    var objectToProcess = context.request.parameters
+                    log.audit(' filters', JSON.stringify(objectToProcess))
+                    var objHolder = {};
+
+                    objHolder['statActual'] = [];
+                    objHolder['statActualPrev'] = [];
+                    objHolder['revActual'] = [];
+                    objHolder['revActualPrev'] = [];
+                    objHolder['expActual'] = [];
+                    objHolder['expActualPrev'] = [];
+                    var month = objectToProcess.month;
+                    var property = objectToProcess.property
+                    var year = objectToProcess.year
+                    var yearPrev = parseInt(year) - 1
+                    var location = objectToProcess.location
+                    var accountingperiod = month.substring(0, 3) + ' ' + year
+                    var accountingperiodPrevious = month.substring(0, 3) + ' ' + yearPrev.toString()
+                    log.audit('accountingperiodPrevious', accountingperiodPrevious)
+                    var acctPeriod = lookForAccPeriod(accountingperiod)
+                    var acctPeriodPrev = lookForAccPeriod(accountingperiodPrevious)
+                    var misReport = month + ' ' + year + ' ' + location.replace(/%20/gi, " ")
+
+                    var statSearch = search.load({
+                        id: STATISTICSEARCH
                     });
 
-                    objResponse.writeFile({
-                        file: fileHolderGenerated,
-                        isInline: false
-                    })
+                    statSearch.filters.push(search.createFilter({
+                        name: 'custrecord_ats_sta_property',
+                        operator: 'anyof',
+                        values: property
+                    }));
+                    statSearch.filters.push(search.createFilter({
+                        name: 'custrecord_ats_sta_accounting_period',
+                        operator: 'anyof',
+                        values: acctPeriod
+                    }));
+
+
+                    var searchResultCount = statSearch.runPaged().count;
+                    if (searchResultCount > 0) {
+                        statSearch.run().each(function (result) {
+                            // log.audit('title', JSON.stringify(result));
+                            var id = result.getValue({
+                                name: 'internalid'
+                            });
+                            var noOfRoomsActual = result.getValue({
+                                name: 'custrecord_ats_sta_num_of_rooms'
+                            });
+
+                            var misNoOFDays = result.getValue({
+                                name: 'custrecord_ats_mis_num_of_days',
+                            });
+                            var misRoomsAvail = result.getValue({
+                                name: 'custrecord_ats_sta_rooms_available'
+                            });
+
+                            var roomSoldActual = result.getValue({
+                                name: 'custrecord_ats_sta_room_sold'
+                            });
+                            var bedSoldActual = result.getValue({
+                                name: 'custrecord_ats_sta_bed_sold'
+                            });
+
+                            var roomsGPActual = result.getValue({
+                                name: 'custrecord2'
+                            });
+
+                            var roomsFBActual = result.getValue({
+                                name: 'custrecord4'
+                            });
+                            var roomsHBActual = result.getValue({
+                                name: 'custrecord6'
+                            });
+
+                            var roomsBBActual = result.getValue({
+                                name: 'custrecord8'
+                            });
+                            var roomsDRActual = result.getValue({
+                                name: 'custrecord10'
+                            });
+
+                            var bedGPActual = result.getValue({
+                                name: 'custrecord12'
+                            });
+                            var bedFBActual = result.getValue({
+                                name: 'custrecord14'
+                            });
+                            var bedHBActual = result.getValue({
+                                name: 'custrecord16'
+                            });
+                            var bedBBActual = result.getValue({
+                                name: 'custrecord18'
+                            });
+                            var bedDRActual = result.getValue({
+                                name: 'custrecord20'
+                            });
+                            var doubleOccupancyActual = result.getValue({
+                                name: 'custrecord_ats_sta_room_occupancy'
+                            });
+                            var roomOccupancyActual = result.getValue({
+                                name: 'custrecord_ats_sta_room_occupancy'
+                            })
+
+                            var revParActual = result.getValue({
+                                name: 'custrecord288'
+                            });
+                            var revPorActual = result.getValue({
+                                name: 'custrecord291'
+                            });
+
+                            var rec = record.load({
+                                type: 'customrecord_ats_mis_statistic',
+                                id: id,
+                                isDynamic: true
+                            })
+
+                            var numOfRoomsBudget = rec.getValue('custrecord253')
+                            var numOfdays = rec.getValue('custrecord_ats_sta_num_of_days')
+                            var roomsAvailableBudget = rec.getValue('custrecord84')
+                            var roomSoldBudget = rec.getValue('custrecord85')
+                            var budgetRoomsGP = rec.getValue('custrecord22')
+                            var budgetRoomsFB = rec.getValue('custrecord23')
+                            var budgetRoomsHB = rec.getValue('custrecord24')
+                            var budgetRoomsBB = rec.getValue('custrecord25')
+                            var budgetRoomsDR = rec.getValue('custrecord26')
+                            var bedSoldBudget = rec.getValue('custrecord86')
+                            var budgetBedsGP = rec.getValue('custrecord27')
+                            var budgetBedsFB = rec.getValue('custrecord28')
+                            var budgetBedsHB = rec.getValue('custrecord29')
+                            var budgetBedsBB = rec.getValue('custrecord30')
+                            var budgetBedsDR = rec.getValue('custrecord31')
+                            var doubleOccupancyBudget = rec.getValue('custrecord247')
+                            var roomOccupancyBduget = rec.getValue('custrecord245')
+                            //average room rate
+                            var revParBudget = rec.getValue('custrecord289')
+                            var revPorBudget = rec.getValue('custrecord292')
+
+
+                            objHolder['statActual'].push({
+                                "misReport": misReport,
+                                "misPrevYear": yearPrev.toString(),
+                                "month": month,
+                                "noOfRoomsActual": noOfRoomsActual,
+                                "misNoOFDays": misNoOFDays,
+                                "misRoomsAvail": misRoomsAvail,
+                                "roomSoldActual": formatNumber(roomSoldActual),
+                                "roomsGPActual": formatNumber(roomsGPActual),
+                                "roomsFBActual": formatNumber(roomsFBActual),
+                                "roomsHBActual": formatNumber(roomsHBActual),
+                                "roomsBBActual": formatNumber(roomsBBActual),
+                                "roomsDRActual": formatNumber(roomsDRActual),
+                                "bedGPActual": bedGPActual,
+                                "bedFBActual": parseInt(bedFBActual),
+                                "bedHBActual": bedHBActual,
+                                "bedBBActual": bedBBActual,
+                                "bedDRActual": bedDRActual,
+                                "doubleOccupancyActual": doubleOccupancyActual,
+                                "roomOccupancyActual": roomOccupancyActual,
+                                "avarageRoomRateActual": "",
+                                "revParActual": revParActual,
+                                "revPorActual": revPorActual, // budget fields
+                                "numOfRoomsBudget": numOfRoomsBudget,
+                                "numOfdays": numOfdays,
+                                "roomsAvailableBudget": roomsAvailableBudget,
+                                "roomSoldBudget": roomSoldBudget,
+                                "budgetRoomsGP": budgetRoomsGP,
+                                "budgetRoomsFB": budgetRoomsFB,
+                                "budgetRoomsHB": budgetRoomsHB,
+                                "budgetRoomsBB": budgetRoomsBB,
+                                "budgetRoomsDR": budgetRoomsDR,
+                                "budgetBedsGP": budgetBedsGP,
+                                "budgetBedsFB": budgetBedsFB,
+                                "budgetBedsHB": budgetBedsHB,
+                                "budgetBedsBB": budgetBedsBB,
+                                "budgetBedsDR": budgetBedsDR
+
+
+                            });
+
+                            return true;
+                        });
+                    }
+                    var statSearchPrev = search.load({
+                        id: STATISTICSEARCH
+                    });
+
+                    statSearchPrev.filters.push(search.createFilter({
+                        name: 'custrecord_ats_sta_property',
+                        operator: 'anyof',
+                        values: property
+                    }));
+                    statSearchPrev.filters.push(search.createFilter({
+                        name: 'custrecord_ats_sta_accounting_period',
+                        operator: 'anyof',
+                        values: acctPeriodPrev
+                    }));
+
+
+                    var searchResultCount = statSearchPrev.runPaged().count;
+                    if (searchResultCount > 0) {
+
+
+                        statSearchPrev.run().each(function (result) {
+
+                            var noOfRoomsActualPrev = result.getValue({
+                                name: 'custrecord_ats_sta_num_of_rooms'
+                            });
+
+                            var misNoOFDaysPrev = result.getValue({
+                                name: 'custrecord_ats_mis_num_of_days',
+                            });
+                            var misRoomsAvailPrev = result.getValue({
+                                name: 'custrecord_ats_sta_rooms_available'
+                            });
+
+                            var roomSoldActualPrev = result.getValue({
+                                name: 'custrecord_ats_sta_room_sold'
+                            });
+                            var bedSoldActualPrev = result.getValue({
+                                name: 'custrecord_ats_sta_bed_sold'
+                            });
+
+                            var roomsGPActualPrev = result.getValue({
+                                name: 'custrecord2'
+                            });
+
+                            var roomsFBActualPrev = result.getValue({
+                                name: 'custrecord4'
+                            });
+                            var roomsHBActualPrev = result.getValue({
+                                name: 'custrecord6'
+                            });
+
+                            var roomsBBActualPrev = result.getValue({
+                                name: 'custrecord8'
+                            });
+                            var roomsDRActualPrev = result.getValue({
+                                name: 'custrecord10'
+                            });
+
+                            var bedGPActualPrev = result.getValue({
+                                name: 'custrecord12'
+                            });
+                            var bedFBActualPrev = result.getValue({
+                                name: 'custrecord14'
+                            });
+                            var bedHBActualPrev = result.getValue({
+                                name: 'custrecord16'
+                            });
+                            var bedBBActualPrev = result.getValue({
+                                name: 'custrecord18'
+                            });
+                            var bedDRActualPrev = result.getValue({
+                                name: 'custrecord20'
+                            });
+
+                            objHolder['statActualPrev'].push({
+
+                                "noOfRoomsActualPrev": noOfRoomsActualPrev,
+                                "misRoomsAvailPrev": misRoomsAvailPrev,
+                                "roomsGPActualPrev": roomsGPActualPrev,
+                                "roomsFBActualPrev": roomsFBActualPrev,
+                                "roomsHBActualPrev": roomsHBActualPrev,
+                                "roomsBBActualPrev": roomsBBActualPrev,
+                                "roomsDRActualPrev": roomsDRActualPrev,
+                                "bedGPActualPrev": bedGPActualPrev,
+                                "bedFBActualPrev": bedFBActualPrev,
+                                "bedHBActualPrev": bedHBActualPrev,
+                                "bedBBActualPrev": bedBBActualPrev,
+                                "bedDRActualPrev": bedDRActualPrev,
+
+
+                            });
+
+                            return true;
+                        });
+                    }
+
+                    // Revenue
+
+
+                    var revSearch = search.load({
+                        id: REVENUESEARCH
+                    });
+
+                    revSearch.filters.push(search.createFilter({
+                        name: 'custrecord_ats_mis_property',
+                        operator: 'anyof',
+                        values: property
+                    }));
+                    revSearch.filters.push(search.createFilter({
+                        name: 'custrecord_ats_accounting_period',
+                        operator: 'anyof',
+                        values: acctPeriod
+                    }));
+
+
+                    var searchResultCount = revSearch.runPaged().count;
+                    if (searchResultCount > 0) {
+                        revSearch.run().each(function (result) {
+                            // log.audit('title', JSON.stringify(result));
+                            var id = result.getValue({
+                                name: 'internalid'
+                            });
+                            var rec = record.load({
+                                type: 'customrecord_ats_mis_revenue',
+                                id: id,
+                                isDynamic: true
+                            })
+                            //Actual Rev
+                            var roomsGP = rec.getValue('custrecord34')
+                            var roomsFB = rec.getValue('custrecord36')
+                            var roomsHB = rec.getValue('custrecord39')
+                            var roomsBB = rec.getValue('custrecord42')
+                            var roomsDR = rec.getValue('custrecord45')
+
+                            var roomOther = rec.getValue('custrecord48')
+                            var food = rec.getValue('custrecord51')
+                            var bar = rec.getValue('custrecord54')
+                            var extras = rec.getValue('custrecord60')
+                            var curioShop = rec.getValue('custrecord63')
+                            var flightsAndTransfers = rec.getValue('custrecord66')
+                            var parkAndConservancyFees = rec.getValue('custrecord69')
+                            var activitiesAndExcursions = rec.getValue('custrecord57')
+                            var spa = rec.getValue('custrecord72')
+                            var shanga = rec.getValue('custrecord75')
+                            var conferences = rec.getValue('custrecord78')
+                            var tourSales = rec.getValue('custrecord81')
+
+
+
+
+
+                            objHolder['revActual'].push({});
+
+                            return true;
+                        });
+                    }
+                    var revSearchPrev = search.load({
+                        id: REVENUESEARCH
+                    });
+
+                    revSearchPrev.filters.push(search.createFilter({
+                        name: 'custrecord_ats_mis_property',
+                        operator: 'anyof',
+                        values: property
+                    }));
+                    revSearchPrev.filters.push(search.createFilter({
+                        name: 'custrecord_ats_accounting_period',
+                        operator: 'anyof',
+                        values: acctPeriodPrev
+                    }));
+
+
+                    var searchResultCount = revSearchPrev.runPaged().count;
+                    if (searchResultCount > 0) {
+
+
+                        revSearchPrev.run().each(function (result) {
+
+
+                            objHolder['revActualPrev'].push({});
+
+                            return true;
+                        });
+                    }
+
+                    log.audit('ObjectHolder ', JSON.stringify(merged))
+
+
+                    var genFile = genExcelXMLFile(objHolder, 247859);
+                    var fileHolderGenerated;
+                    var excelFile;
+                    var fileSearchObj = search.create({
+                        type: "file",
+                        filters:
+                            [
+                                ["name", "contains", "ATS TEST GENFILE Latest.xls"]
+                            ],
+                        columns:
+                            [
+                                search.createColumn({name: "internalid", label: "Internal ID"})
+                            ]
+                    });
+                    var searchResultCountFile = fileSearchObj.runPaged().count;
+                    if (searchResultCountFile > 0) {
+                        fileSearchObj.run().each(function (result) {
+                            excelFile = result.getValue({
+                                name: 'internalid'
+                            })
+                        })
+                        if (excelFile) {
+                            fileHolderGenerated = file.load({
+                                id: excelFile
+                            });
+                            objResponse.writeFile({
+                                file: fileHolderGenerated,
+                                isInline: false
+                            })
+                        }
+                    }
 
                     return;
                 }
@@ -122,219 +518,7 @@ define(['N/ui/serverWidget', 'N/search', 'N/redirect', 'N/render', 'N/file', 'N/
                         text: REPORTTYPE[i]
                     })
                 }
-                var searchHolder = search.load({
-                    id: 'customsearch_ats_sum_stat_actual'
-                });
-                //test
-                var objHolder = {};
-                objHolder['statActual'] = [];
-                objHolder['statBudget'] = [];
 
-                // Manual placement of Title
-                // objHolder['firstSearch'].push({
-                //     "misCategory":"REVENUE CATEGORY",
-                //     "misNoOFDays": "NO OF DAYS",
-                //     "misRoomsAvail" : "ROOMS AVAILABLE",
-                //     "misRoomsSold" : "ROOMS SOLD",
-                //     "misActual":"ACTUAL",
-                //     "misBudget":"BUDGET"
-                // });
-
-                // object Conversion
-                searchHolder.run().each(function (result) {
-                   // log.audit('title', JSON.stringify(result));
-                    var noOfRoomsActual = result.getText({
-                        name: 'custrecord_ats_sta_num_of_rooms',
-                        summary: search.Summary.GROUP
-                    });
-
-                    var misNoOFDays = result.getValue({
-                        name: 'custrecord_ats_mis_num_of_days',
-                        summary: search.Summary.GROUP
-                    });
-                    var misRoomsAvail = result.getValue({
-                        name: 'custrecord_ats_sta_rooms_available',
-                        summary: search.Summary.GROUP
-                    });
-
-                    var roomSoldActual = result.getValue({
-                        name: 'custrecord_ats_sta_room_sold',
-                        summary: search.Summary.GROUP
-                    });
-                    var bedSoldActual = result.getValue({
-                        name: 'custrecord_ats_sta_bed_sold',
-                        summary: search.Summary.GROUP
-                    });
-
-                    var roomsGPActual = result.getValue({
-                        name: 'custrecord2',
-                        summary: search.Summary.GROUP
-                    });
-
-                    var roomsFBActual = result.getValue({
-                        name: 'custrecord4',
-                        summary: search.Summary.GROUP
-                    });
-                    var roomsHBActual = result.getValue({
-                        name: 'custrecord6',
-                        summary: search.Summary.GROUP
-                    });
-
-                    var roomsBBActual = result.getValue({
-                        name: 'custrecord8',
-                        summary: search.Summary.GROUP
-                    });
-                    var roomsDRActual = result.getValue({
-                        name: 'custrecord10',
-                        summary: search.Summary.GROUP
-                    });
-
-                    var bedGPActual = result.getValue({
-                        name: 'custrecord12',
-                        summary: search.Summary.GROUP
-                    });
-                    var bedFBActual = result.getValue({
-                        name: 'custrecord14',
-                        summary: search.Summary.GROUP
-                    });
-                    var bedHBActual = result.getValue({
-                        name: 'custrecord16',
-                        summary: search.Summary.GROUP
-                    });
-                    var bedBBActual = result.getValue({
-                        name: 'custrecord18',
-                        summary: search.Summary.GROUP
-                    });
-                    var bedDRActual = result.getValue({
-                        name: 'custrecord20',
-                        summary: search.Summary.GROUP
-                    });
-                    var doubleOccupancyActual = result.getValue({
-                        name: 'custrecord_ats_sta_room_occupancy',
-                        summary: search.Summary.GROUP
-                    });
-                    var roomOccupancyActual = result.getValue({
-                        name: 'custrecord_ats_sta_room_occupancy',
-                        summary: search.Summary.GROUP
-                    })
-
-                    var revParActual = result.getValue({
-                        name: 'custrecord288',
-                        summary: search.Summary.GROUP
-                    });
-                    var revPorActual = result.getValue({
-                        name: 'custrecord291',
-                        summary: search.Summary.GROUP
-                    });
-
-
-                    objHolder['statActual'].push({
-                        "noOfRoomsActual": noOfRoomsActual,
-                        "misNoOFDays": misNoOFDays,
-                        "misRoomsAvail": misRoomsAvail,
-                        "roomSoldActual": roomSoldActual,
-                        "roomsGPActual": roomsGPActual,
-                        "roomsFBActual": roomsFBActual,
-                        "roomsHBActual": roomsHBActual,
-                        "roomsBBActual": roomsBBActual,
-                        "roomsDRActual": roomsDRActual,
-                        "bedSoldActual": bedSoldActual,
-                        "bedGPActual": bedGPActual,
-                        "bedFBActual": bedFBActual,
-                        "bedHBActual": bedHBActual,
-                        "bedBBActual": bedBBActual,
-                        "bedDRActual": bedDRActual,
-                        "doubleOccupancyActual": doubleOccupancyActual,
-                        "roomOccupancyActual": roomOccupancyActual,
-                        "avarageRoomRateActual": "",
-                        "revParActual": revParActual,
-                        "revPorActual": revPorActual
-
-                    });
-
-                    return true;
-                });
-
-                // Add 2nd layer for display purposes
-
-                // objHolder['firstSearch'].push({
-                //     "misCategory": '',
-                //     "misNoOFDays": '',
-                //     "misRoomsAvail": '',
-                //     "misRoomsSold": '',
-                //     "misActual": '',
-                //     "misBudget": '',
-                //     //add filler part
-                //     "misSpaceCreation": ' ',
-                //     "fillerB": '',
-                //     "fillerC": '',
-                //     "fillerD": '',
-                //     "fillerE": '',
-                //     "fillerF": '',
-                //     "fillerG": ''
-                // });
-
-                // searchHolder.run().each(function (result) {
-                //     log.audit('title', JSON.stringify(result));
-                //     var misCategory = result.getText({
-                //         name: 'custrecord_ats_rev_category',
-                //         summary: search.Summary.GROUP
-                //     });
-                //
-                //
-                //     var misNoOFDays = result.getValue({
-                //         name: 'custrecord_ats_mis_num_of_days',
-                //         summary: search.Summary.SUM
-                //     });
-                //
-                //     var misRoomsAvail = result.getValue({
-                //         name: 'custrecord_ats_mis_rooms_available',
-                //         summary: search.Summary.SUM
-                //     });
-                //
-                //     var misRoomsSold = result.getValue({
-                //         name: 'custrecord_ats_mis_rooms_sold',
-                //         summary: search.Summary.SUM
-                //     });
-                //
-                //     var misActual = result.getValue({
-                //         name: 'custrecord_ats_mis_actual',
-                //         summary: search.Summary.GROUP
-                //     });
-                //
-                //     var misBudget = result.getValue({
-                //         name: 'custrecord_ats_mis_budget',
-                //         summary: search.Summary.GROUP
-                //     });
-                //
-                //     //defining static for test
-                //     misRoomsAvail = 20;
-                //     misRoomsSold = 30;
-                //
-                //     objHolder['firstSearch'].push({
-                //         "misCategory": misCategory,
-                //         "misNoOFDays": misNoOFDays,
-                //         "misRoomsAvail": misRoomsAvail,
-                //         "misRoomsSold": misRoomsSold,
-                //         "misActual": misActual,
-                //         "misBudget": misBudget,
-                //         //add filler part
-                //         "misSpaceCreation": ' ',
-                //         "fillerB": misCategory,
-                //         "fillerC": misNoOFDays,
-                //         "fillerD": misRoomsAvail,
-                //         "fillerE": misRoomsSold,
-                //         "fillerF": misActual,
-                //         "fillerG": misBudget
-                //     });
-                //
-                //     return true;
-                // });
-
-
-                log.audit('JSON Sample Holder', JSON.stringify(objHolder));
-
-                var genFile = genExcelXMLFile(objHolder, 246681);
 
                 form.addButton({
                     id: 'custpage_previous',
@@ -372,7 +556,7 @@ define(['N/ui/serverWidget', 'N/search', 'N/redirect', 'N/render', 'N/file', 'N/
 
 
             var fileXLSXML = file.create({
-                name: 'ATS TEST GENFILE JAMES' + '.xls',
+                name: 'ATS TEST GENFILE Latest' + '.xls',
                 fileType: file.Type.XMLDOC,
                 contents: renderer.renderAsString()
             })
@@ -381,6 +565,36 @@ define(['N/ui/serverWidget', 'N/search', 'N/redirect', 'N/render', 'N/file', 'N/
 
             return fileId;
 
+        }
+
+        function formatNumber(n) {
+            return n.replace(/./g, function (c, i, a) {
+                return i > 0 && c !== "." && (a.length - i) % 3 === 0 ? "," + c : c;
+            });
+        }
+
+        function lookForAccPeriod(period) {
+            var accountPeriod;
+            var accountingperiodSearchObj = search.load({
+                id: 'customsearch_ats_accounting_period'
+            })
+            accountingperiodSearchObj.filters.push(search.createFilter({
+                name: 'periodname',
+                operator: 'contains',
+                values: period
+            }));
+            accountingperiodSearchObj.run().each(function (result) {
+
+                accountPeriod = result.getValue({
+                    name: 'internalid',
+                    summary: 'GROUP'
+                })
+
+
+                return true;
+            });
+
+            return accountPeriod;
         }
 
         return {
