@@ -4,8 +4,8 @@
  */
 const PROPERTYSEARCHPARENT = 'customsearch_ats_cogsreport_property'
 const STATISTICSEARCH = 'customsearch_ats_sum_stat_actual'
-const REVENUESEARCH = 'customsearch_ats_sum_stat_actual'
-const EXPENSESEARCH = 'customsearch_ats_sum_stat_actual'
+const REVENUESEARCH = 'customsearchats_sum_rev_actual'
+const EXPENSESEARCH = 'customsearch__ats_sum_exp_actual'
 const REPORTTYPE = ['ALL', 'STATISTIC', 'REVENUE', 'EXPENSE']
 
 //CONSTS Declaration
@@ -24,8 +24,10 @@ define(['N/ui/serverWidget', 'N/search', 'N/redirect', 'N/render', 'N/file', 'N/
                     objHolder['statActual'] = [];
                     objHolder['statActualPrev'] = [];
                     objHolder['revActual'] = [];
+                    objHolder['revBudget'] = [];
                     objHolder['revActualPrev'] = [];
                     objHolder['expActual'] = [];
+                    objHolder['expBudget'] = [];
                     objHolder['expActualPrev'] = [];
                     var month = objectToProcess.month;
                     var property = objectToProcess.property
@@ -157,6 +159,7 @@ define(['N/ui/serverWidget', 'N/search', 'N/redirect', 'N/render', 'N/file', 'N/
 
                             objHolder['statActual'].push({
                                 "misReport": misReport,
+                                "year": year,
                                 "misPrevYear": yearPrev.toString(),
                                 "month": month,
                                 "noOfRoomsActual": noOfRoomsActual,
@@ -318,6 +321,8 @@ define(['N/ui/serverWidget', 'N/search', 'N/redirect', 'N/render', 'N/file', 'N/
                     if (searchResultCount > 0) {
                         revSearch.run().each(function (result) {
                             // log.audit('title', JSON.stringify(result));
+                            var budget = 'T'
+                            var actual = 'T'
                             var id = result.getValue({
                                 name: 'internalid'
                             });
@@ -326,31 +331,92 @@ define(['N/ui/serverWidget', 'N/search', 'N/redirect', 'N/render', 'N/file', 'N/
                                 id: id,
                                 isDynamic: true
                             })
-                            //Actual Rev
-                            var roomsGP = rec.getValue('custrecord34')
-                            var roomsFB = rec.getValue('custrecord36')
-                            var roomsHB = rec.getValue('custrecord39')
-                            var roomsBB = rec.getValue('custrecord42')
-                            var roomsDR = rec.getValue('custrecord45')
 
-                            var roomOther = rec.getValue('custrecord48')
-                            var food = rec.getValue('custrecord51')
-                            var bar = rec.getValue('custrecord54')
-                            var extras = rec.getValue('custrecord60')
-                            var curioShop = rec.getValue('custrecord63')
-                            var flightsAndTransfers = rec.getValue('custrecord66')
-                            var parkAndConservancyFees = rec.getValue('custrecord69')
-                            var activitiesAndExcursions = rec.getValue('custrecord57')
-                            var spa = rec.getValue('custrecord72')
-                            var shanga = rec.getValue('custrecord75')
-                            var conferences = rec.getValue('custrecord78')
-                            var tourSales = rec.getValue('custrecord81')
+                            if(actual === 'T'){
+                                var roomsGP = rec.getValue('custrecord32')
+                                var roomsFB = rec.getValue('custrecord35')
+                                var roomsHB = rec.getValue('custrecord38')
+                                var roomsBB = rec.getValue('custrecord41')
+                                var roomsDR = rec.getValue('custrecord44')
 
-
-
+                                var roomOther = rec.getValue('custrecord47')
+                                var food = rec.getValue('custrecord50')
+                                var bar = rec.getValue('custrecord53')
+                                var extras = rec.getValue('custrecord59')
+                                var curioShop = rec.getValue('custrecord62')
+                                var flightsAndTransfers = rec.getValue('custrecord65')
+                                var parkAndConservancyFees = rec.getValue('custrecord68')
+                                var activitiesAndExcursions = rec.getValue('custrecord56')
+                                var spa = rec.getValue('custrecord71')
+                                var shanga = rec.getValue('custrecord74')
+                                var conferences = rec.getValue('custrecord77')
+                                var tourSales = rec.getValue('custrecord80')
 
 
-                            objHolder['revActual'].push({});
+                                objHolder['revActual'].push({
+                                    "roomsGP": roomsGP,
+                                    "roomsFB": roomsFB,
+                                    "roomsHB": roomsHB,
+                                    "roomsBB": roomsBB,
+                                    "roomsDR": roomsDR,
+                                    "roomOther": roomOther,
+                                    "food": food,
+                                    "bar": bar,
+                                    "extras": extras,
+                                    "curioShop": curioShop,
+                                    "flightsAndTransfers": flightsAndTransfers,
+                                    "parkAndConservancyFees": parkAndConservancyFees,
+                                    "activitiesAndExcursions": activitiesAndExcursions,
+                                    "spa": spa,
+                                    "shanga": shanga,
+                                    "conferences": conferences,
+                                    "tourSales": tourSales,
+
+                                });
+                            }
+                            //Budget Rev
+                            if(budget === 'T') {
+                                var roomsGP = rec.getValue('custrecord34')
+                                var roomsFB = rec.getValue('custrecord36')
+                                var roomsHB = rec.getValue('custrecord39')
+                                var roomsBB = rec.getValue('custrecord42')
+                                var roomsDR = rec.getValue('custrecord45')
+
+                                var roomOther = rec.getValue('custrecord48')
+                                var food = rec.getValue('custrecord51')
+                                var bar = rec.getValue('custrecord54')
+                                var extras = rec.getValue('custrecord60')
+                                var curioShop = rec.getValue('custrecord63')
+                                var flightsAndTransfers = rec.getValue('custrecord66')
+                                var parkAndConservancyFees = rec.getValue('custrecord69')
+                                var activitiesAndExcursions = rec.getValue('custrecord57')
+                                var spa = rec.getValue('custrecord72')
+                                var shanga = rec.getValue('custrecord75')
+                                var conferences = rec.getValue('custrecord78')
+                                var tourSales = rec.getValue('custrecord81')
+
+
+                                objHolder['revBudget'].push({
+                                    "roomsGP": roomsGP,
+                                    "roomsFB": roomsFB,
+                                    "roomsHB": roomsHB,
+                                    "roomsBB": roomsBB,
+                                    "roomsDR": roomsDR,
+                                    "roomOther": roomOther,
+                                    "food": food,
+                                    "bar": bar,
+                                    "extras": extras,
+                                    "curioShop": curioShop,
+                                    "flightsAndTransfers": flightsAndTransfers,
+                                    "parkAndConservancyFees": parkAndConservancyFees,
+                                    "activitiesAndExcursions": activitiesAndExcursions,
+                                    "spa": spa,
+                                    "shanga": shanga,
+                                    "conferences": conferences,
+                                    "tourSales": tourSales
+
+                                });
+                            }
 
                             return true;
                         });
@@ -376,15 +442,263 @@ define(['N/ui/serverWidget', 'N/search', 'N/redirect', 'N/render', 'N/file', 'N/
 
 
                         revSearchPrev.run().each(function (result) {
+                            var id = result.getValue({
+                                name: 'internalid'
+                            });
+                            var rec = record.load({
+                                type: 'customrecord_ats_mis_revenue',
+                                id: id,
+                                isDynamic: true
+                            })
+
+                            var roomsGP = rec.getValue('custrecord32')
+                            var roomsFB = rec.getValue('custrecord35')
+                            var roomsHB = rec.getValue('custrecord38')
+                            var roomsBB = rec.getValue('custrecord41')
+                            var roomsDR = rec.getValue('custrecord44')
+
+                            var roomOther = rec.getValue('custrecord47')
+                            var food = rec.getValue('custrecord50')
+                            var bar = rec.getValue('custrecord53')
+                            var extras = rec.getValue('custrecord59')
+                            var curioShop = rec.getValue('custrecord62')
+                            var flightsAndTransfers = rec.getValue('custrecord65')
+                            var parkAndConservancyFees = rec.getValue('custrecord68')
+                            var activitiesAndExcursions = rec.getValue('custrecord56')
+                            var spa = rec.getValue('custrecord71')
+                            var shanga = rec.getValue('custrecord74')
+                            var conferences = rec.getValue('custrecord77')
+                            var tourSales = rec.getValue('custrecord80')
 
 
-                            objHolder['revActualPrev'].push({});
+                            objHolder['revActualPrev'].push({
+                                "roomsGP": roomsGP,
+                                "roomsFB": roomsFB,
+                                "roomsHB": roomsHB,
+                                "roomsBB": roomsBB,
+                                "roomsDR": roomsDR,
+                                "roomOther": roomOther,
+                                "food": food,
+                                "bar": bar,
+                                "extras": extras,
+                                "curioShop": curioShop,
+                                "flightsAndTransfers": flightsAndTransfers,
+                                "parkAndConservancyFees": parkAndConservancyFees,
+                                "activitiesAndExcursions": activitiesAndExcursions,
+                                "spa": spa,
+                                "shanga": shanga,
+                                "conferences": conferences,
+                                "tourSales": tourSales
+
+                            });
 
                             return true;
                         });
                     }
 
-                    log.audit('ObjectHolder ', JSON.stringify(merged))
+                    // Expense
+
+
+                    // var expSearch = search.load({
+                    //     id: EXPENSESEARCH
+                    // });
+                    //
+                    // expSearch.filters.push(search.createFilter({
+                    //     name: 'custrecord_ats_mis_rev_property',
+                    //     operator: 'anyof',
+                    //     values: property
+                    // }));
+                    // expSearch.filters.push(search.createFilter({
+                    //     name: 'custrecord_ats_exp_accounting_period',
+                    //     operator: 'anyof',
+                    //     values: acctPeriod
+                    // }));
+                    //
+                    //
+                    // var searchResultCount = expSearch.runPaged().count;
+                    // if (searchResultCount > 0) {
+                    //     expSearch.run().each(function (result) {
+                    //         // log.audit('title', JSON.stringify(result));
+                    //         var budget = 'T'
+                    //         var actual = 'T'
+                    //         var id = result.getValue({
+                    //             name: 'internalid'
+                    //         });
+                    //         var rec = record.load({
+                    //             type: 'customrecord_ats_mis_expense',
+                    //             id: id,
+                    //             isDynamic: true
+                    //         })
+                    //
+                    //         if(actual === 'T'){
+                    //             var roomsGP = rec.getValue('custrecord32')
+                    //             var roomsFB = rec.getValue('custrecord35')
+                    //             var roomsHB = rec.getValue('custrecord38')
+                    //             var roomsBB = rec.getValue('custrecord41')
+                    //             var roomsDR = rec.getValue('custrecord44')
+                    //
+                    //             var roomOther = rec.getValue('custrecord47')
+                    //             var food = rec.getValue('custrecord50')
+                    //             var bar = rec.getValue('custrecord53')
+                    //             var extras = rec.getValue('custrecord59')
+                    //             var curioShop = rec.getValue('custrecord62')
+                    //             var flightsAndTransfers = rec.getValue('custrecord65')
+                    //             var parkAndConservancyFees = rec.getValue('custrecord68')
+                    //             var activitiesAndExcursions = rec.getValue('custrecord56')
+                    //             var spa = rec.getValue('custrecord71')
+                    //             var shanga = rec.getValue('custrecord74')
+                    //             var conferences = rec.getValue('custrecord77')
+                    //             var tourSales = rec.getValue('custrecord80')
+                    //
+                    //
+                    //             objHolder['revActual'].push({
+                    //                 "roomsGP": roomsGP,
+                    //                 "roomsFB": roomsFB,
+                    //                 "roomsHB": roomsHB,
+                    //                 "roomsBB": roomsBB,
+                    //                 "roomsDR": roomsDR,
+                    //                 "roomOther": roomOther,
+                    //                 "food": food,
+                    //                 "bar": bar,
+                    //                 "extras": extras,
+                    //                 "curioShop": curioShop,
+                    //                 "flightsAndTransfers": flightsAndTransfers,
+                    //                 "parkAndConservancyFees": parkAndConservancyFees,
+                    //                 "activitiesAndExcursions": activitiesAndExcursions,
+                    //                 "spa": spa,
+                    //                 "shanga": shanga,
+                    //                 "conferences": conferences,
+                    //                 "tourSales": tourSales
+                    //
+                    //             });
+                    //         }
+                    //         //Budget Rev
+                    //         if(budget === 'T') {
+                    //             vc_bar = rec.getValue('custrecord97')
+                    //             vc_food = rec.getValue('custrecord94')
+                    //             vc_housekeeping = rec.getValue('custrecord100')
+                    //             vc_gascost = rec.getValue('custrecord103')
+                    //             vc_kitchenconsumables = rec.getValue('custrecord106')
+                    //             vc_driverscost = rec.getValue('custrecord109')
+                    //             vc_guestwaterbottle = rec.getValue('custrecord112')
+                    //             vc_landandlife = rec.getValue('custrecord115')
+                    //             vc_conferences = rec.getValue('custrecord118')
+                    //
+                    //             var roomOther = rec.getValue('custrecord48')
+                    //             var food = rec.getValue('custrecord51')
+                    //             var bar = rec.getValue('custrecord54')
+                    //             var extras = rec.getValue('custrecord60')
+                    //             var curioShop = rec.getValue('custrecord63')
+                    //             var flightsAndTransfers = rec.getValue('custrecord66')
+                    //             var parkAndConservancyFees = rec.getValue('custrecord69')
+                    //             var activitiesAndExcursions = rec.getValue('custrecord57')
+                    //             var spa = rec.getValue('custrecord72')
+                    //             var shanga = rec.getValue('custrecord75')
+                    //             var conferences = rec.getValue('custrecord78')
+                    //             var tourSales = rec.getValue('custrecord81')
+                    //
+                    //
+                    //             objHolder['revBudget'].push({
+                    //                 "vc_bar": vc_bar,
+                    //                 "vc_food": vc_food,
+                    //                 "vc_housekeeping": vc_housekeeping,
+                    //                 "vc_gascost": vc_gascost,
+                    //                 "vc_kitchenconsumables": vc_kitchenconsumables,
+                    //                 "vc_driverscost": vc_guestwaterbottle,
+                    //                 "vc_landandlife": vc_landandlife,
+                    //                 "bar": bar,
+                    //                 "extras": extras,
+                    //                 "curioShop": curioShop,
+                    //                 "flightsAndTransfers": flightsAndTransfers,
+                    //                 "parkAndConservancyFees": parkAndConservancyFees,
+                    //                 "activitiesAndExcursions": activitiesAndExcursions,
+                    //                 "spa": spa,
+                    //                 "shanga": shanga,
+                    //                 "conferences": conferences,
+                    //                 "tourSales": tourSales
+                    //
+                    //             });
+                    //         }
+                    //
+                    //         return true;
+                    //     });
+                    // }
+                    // var revSearchPrev = search.load({
+                    //     id: REVENUESEARCH
+                    // });
+                    //
+                    // revSearchPrev.filters.push(search.createFilter({
+                    //     name: 'custrecord_ats_mis_property',
+                    //     operator: 'anyof',
+                    //     values: property
+                    // }));
+                    // revSearchPrev.filters.push(search.createFilter({
+                    //     name: 'custrecord_ats_accounting_period',
+                    //     operator: 'anyof',
+                    //     values: acctPeriodPrev
+                    // }));
+                    //
+                    //
+                    // var searchResultCount = revSearchPrev.runPaged().count;
+                    // if (searchResultCount > 0) {
+                    //
+                    //
+                    //     revSearchPrev.run().each(function (result) {
+                    //         var id = result.getValue({
+                    //             name: 'internalid'
+                    //         });
+                    //         var rec = record.load({
+                    //             type: 'customrecord_ats_mis_revenue',
+                    //             id: id,
+                    //             isDynamic: true
+                    //         })
+                    //
+                    //         var roomsGP = rec.getValue('custrecord32')
+                    //         var roomsFB = rec.getValue('custrecord35')
+                    //         var roomsHB = rec.getValue('custrecord38')
+                    //         var roomsBB = rec.getValue('custrecord41')
+                    //         var roomsDR = rec.getValue('custrecord44')
+                    //
+                    //         var roomOther = rec.getValue('custrecord47')
+                    //         var food = rec.getValue('custrecord50')
+                    //         var bar = rec.getValue('custrecord53')
+                    //         var extras = rec.getValue('custrecord59')
+                    //         var curioShop = rec.getValue('custrecord62')
+                    //         var flightsAndTransfers = rec.getValue('custrecord65')
+                    //         var parkAndConservancyFees = rec.getValue('custrecord68')
+                    //         var activitiesAndExcursions = rec.getValue('custrecord56')
+                    //         var spa = rec.getValue('custrecord71')
+                    //         var shanga = rec.getValue('custrecord74')
+                    //         var conferences = rec.getValue('custrecord77')
+                    //         var tourSales = rec.getValue('custrecord80')
+                    //
+                    //
+                    //         objHolder['revActualPrev'].push({
+                    //             "roomsGP": 120,
+                    //             "roomsFB": roomsFB,
+                    //             "roomsHB": roomsHB,
+                    //             "roomsBB": roomsBB,
+                    //             "roomsDR": roomsDR,
+                    //             "roomOther": roomOther,
+                    //             "food": food,
+                    //             "bar": bar,
+                    //             "extras": extras,
+                    //             "curioShop": curioShop,
+                    //             "flightsAndTransfers": flightsAndTransfers,
+                    //             "parkAndConservancyFees": parkAndConservancyFees,
+                    //             "activitiesAndExcursions": activitiesAndExcursions,
+                    //             "spa": spa,
+                    //             "shanga": shanga,
+                    //             "conferences": conferences,
+                    //             "tourSales": tourSales
+                    //
+                    //         });
+                    //
+                    //         return true;
+                    //     });
+                    // }
+
+                    log.audit('ObjectHolder ', JSON.stringify(objHolder))
 
 
                     var genFile = genExcelXMLFile(objHolder, 247859);
