@@ -22,7 +22,7 @@ define(['N/ui/serverWidget', 'N/search', 'N/redirect', 'N/render', 'N/file', 'N/
                     var objectToProcess = context.request.parameters
                     log.audit(' filters', JSON.stringify(objectToProcess))
                     var objHolder = {};
-
+                    var monthList = ['Jan', 'Feb','Mar', 'Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
                     objHolder['statActual'] = [];
                     objHolder['statActualPrev'] = [];
                     objHolder['revActual'] = [];
@@ -1339,26 +1339,26 @@ define(['N/ui/serverWidget', 'N/search', 'N/redirect', 'N/render', 'N/file', 'N/
                 year.isMandatory = true
 
 
-                var accountingBooks = form.addField({
-                    id: 'custpage_accounting_books',
-                    type: serverWidget.FieldType.SELECT,
-                    label: 'Accounting Books',
-                    source: '-253', //accounting books
-                    container: 'custpage_available_filter'
-                });
-                var reportType = form.addField({
-                    id: 'custpage_report_type',
-                    type: serverWidget.FieldType.MULTISELECT,
-                    label: 'Report Type',
-                    container: 'custpage_available_filter'
-                });
-                reportType.isMandatory = true
-                for (var i = 0; i < REPORTTYPE.length; i++) {
-                    reportType.addSelectOption({
-                        value: i,
-                        text: REPORTTYPE[i]
-                    })
-                }
+                // var accountingBooks = form.addField({
+                //     id: 'custpage_accounting_books',
+                //     type: serverWidget.FieldType.SELECT,
+                //     label: 'Accounting Books',
+                //     source: '-253', //accounting books
+                //     container: 'custpage_available_filter'
+                // });
+                // var reportType = form.addField({
+                //     id: 'custpage_report_type',
+                //     type: serverWidget.FieldType.MULTISELECT,
+                //     label: 'Report Type',
+                //     container: 'custpage_available_filter'
+                // });
+                //
+                // for (var i = 0; i < REPORTTYPE.length; i++) {
+                //     reportType.addSelectOption({
+                //         value: i,
+                //         text: REPORTTYPE[i]
+                //     })
+                // }
 
 
                 form.addButton({

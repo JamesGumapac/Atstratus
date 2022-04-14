@@ -161,7 +161,16 @@ define(['N/record', 'N/search'],
                             fieldId: 'custrecord47',
                             value: amount
                         })
-                        roomsActualTotal += parseFloat(amount)
+                       // roomsActualTotal += parseFloat(amount)
+
+                    }
+                    if (revCategory.includes('Sales Related') === true) {
+                        log.debug('Food')
+                        misRec.setValue({
+                            fieldId: 'custrecord300',
+                            value: amount
+                        })
+
 
                     }
                     if (revCategory.includes('Food') === true) {

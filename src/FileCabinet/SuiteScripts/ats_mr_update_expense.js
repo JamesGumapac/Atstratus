@@ -188,25 +188,34 @@ define(['N/record', 'N/search'],
                     })
                     log.audit(`APeriod : ${accountingPeriod} | expCategory: ${expCategory} | amount: ${amount}`)
 
+                    if (expCategory.includes('Sales Related') === true) {
+                        // log.debug('taxes')
+                        misExp.setValue({
+                            fieldId: 'custrecord300',
+                            value: amount
+                        })
+                        // taxesTotal += parseInt(amount)
 
+
+                    }
                     if (expCategory.includes('Taxes') === true) {
                         // log.debug('taxes')
-                        // misRec.setValue({
-                        //     fieldId: 'custrecord32',
-                        //     value: amount
-                        // })
-                        taxesTotal += parseInt(amount)
+                        misExp.setValue({
+                            fieldId: 'custrecord87',
+                            value: amount
+                        })
+                       // taxesTotal += parseInt(amount)
 
 
                     }
 
                     if (expCategory.includes('Concession Fees') === true) {
-                        // log.debug('taxes')
-                        // misRec.setValue({
-                        //     fieldId: 'custrecord32',
-                        //     value: amount
-                        // })
-                        concessionFeesTotal += parseInt(amount)
+                        log.debug('taxes')
+                        misExp.setValue({
+                            fieldId: 'custrecord90',
+                            value: amount
+                        })
+                     //   concessionFeesTotal += parseInt(amount)
 
 
                     }

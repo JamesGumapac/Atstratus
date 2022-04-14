@@ -19,9 +19,12 @@ define(['N/url', 'N/currentRecord', 'N/search', 'N/format'],
             var property = context.currentRecord.getValue({
                 fieldId: 'custpage_location_filter'
             })
-            if(month !== '' && year !== '' && property !== ''){
+            if( property !== '' && month !== '' && year !== '' ){
                 generateMisReport.isDisabled = false
+            }else{
+                generateMisReport.isDisabled = true
             }
+
 
 
 

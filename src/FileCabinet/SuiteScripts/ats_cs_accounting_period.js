@@ -44,7 +44,21 @@ define(['N/record', 'N/search'],
          */
         function pageInit(context) {
             var curRec = context.currentRecord;
+            var getField = context.fieldId
             if (curRec.type == 'customrecord_ats_mis_revenue') {
+                console.log('Revenue record')
+                var misParent = curRec.getText({
+                    fieldId: 'custrecord_ats_mis_parent'
+                })
+                var prop = curRec.getValue('custrecord_ats_mis_property')
+                if(misParent) {
+                    if (prop == '') {
+                        curRec.setText({
+                            fieldId: 'custrecord_ats_mis_property',
+                            text: misParent
+                        })
+                    }
+                }
                 var month = curRec.getText('custrecord_ats_mis_month')
                 console.log('Month ' + month)
                 var year = curRec.getText('custrecord_ats_mis_year')
@@ -59,7 +73,7 @@ define(['N/record', 'N/search'],
                 })
 
             }
-            if (curRec.type == 'customrecord_ats_mis_statistic') {
+         if (curRec.type == 'customrecord_ats_mis_statistic') {
                 console.log('Statistic record')
                 var misParent = curRec.getText({
                     fieldId: 'custrecord_ats_sta_mis_parent'
@@ -77,20 +91,37 @@ define(['N/record', 'N/search'],
                 console.log('Month ' + month)
                 var year = curRec.getText('custrecord_ats_sta_year')
                 console.log('Year ' + year)
-                var monthFinal = month.substring(0, 3);
-                var period = monthFinal + " " + year
-                console.log(lookForAccPeriod(period))
-                var acctPeriod = lookForAccPeriod(period)
-                curRec.setValue({
-                    fieldId: 'custrecord_ats_sta_accounting_period',
-                    value: acctPeriod
-                })
-
+                if(month != '' && year !='' ) {
+                    var monthFinal = month.substring(0, 3);
+                    var period = monthFinal + " " + year
+                    console.log(lookForAccPeriod(period))
+                    var acctPeriod = lookForAccPeriod(period)
+                    curRec.setValue({
+                        fieldId: 'custrecord_ats_sta_accounting_period',
+                        value: acctPeriod
+                    })
+                }
 
             }
             if (curRec.type == 'customrecord_ats_mis_expense') {
                 console.log('Expense record')
-
+                if(getField === "name")
+                {
+                    var name = getField('name')
+                    name.isMandatory = false
+                }
+                var misParent = curRec.getText({
+                    fieldId: 'custrecord_ats_mis_rev_parent'
+                })
+                var prop = curRec.getValue('custrecord_ats_mis_rev_property')
+                if(misParent) {
+                    if (prop == '') {
+                        curRec.setText({
+                            fieldId: 'custrecord_ats_mis_rev_property',
+                            text: misParent
+                        })
+                    }
+                }
                     var month = curRec.getText('custrecord_ats_mis_exp_months')
                     console.log('Month ' + month)
                     var year = curRec.getText('custrecord_ats_mis_exp_year')
@@ -123,9 +154,9 @@ define(['N/record', 'N/search'],
         function fieldChanged(context) {
             var curRec = context.currentRecord;
             var getField = context.fieldId
-            if (curRec.type == 'customrecord_ats_mis_statistics') {
+            if (curRec.type == 'customrecord_ats_mis_revenue') {
                 console.log('Revenue record')
-                if (getField == 'custrecord_ats_mis_month' || getField == 'custrecord_ats_mis_year') {
+                if (getField == 'custrecord_ats_mis_month') {
                     var month = curRec.getText('custrecord_ats_mis_month')
                     console.log('Month ' + month)
                     var year = curRec.getText('custrecord_ats_mis_year')
@@ -141,15 +172,17 @@ define(['N/record', 'N/search'],
 
                 }
             }
-            if (curRec.type == 'customrecord_ats_mis_statistic') {
+            if (curRec.type === 'customrecord_ats_mis_statistic') {
                 console.log('Statistic record')
-                if (getField == 'custrecord_ats_sta_month' || getField == 'custrecord_ats_sta_year') {
+                if (getField == 'custrecord_ats_sta_month') {
                     var month = curRec.getText('custrecord_ats_sta_month')
                     console.log('Month ' + month)
                     var year = curRec.getText('custrecord_ats_sta_year')
                     console.log('Year ' + year)
+
                     var monthFinal = month.substring(0, 3);
                     var period = monthFinal + " " + year
+                    console.log('period' + period)
                     console.log(lookForAccPeriod(period))
                     var acctPeriod = lookForAccPeriod(period)
                     curRec.setValue({
@@ -157,13 +190,13 @@ define(['N/record', 'N/search'],
                         value: acctPeriod
                     })
 
+
                 }
-
-
             }
+
             if (curRec.type == 'customrecord_ats_mis_expense') {
                 console.log('Expense record')
-                if (getField == 'custrecord_ats_mis_exp_months' || getField == 'custrecord_ats_mis_exp_year') {
+                if (getField == 'custrecord_ats_mis_exp_months' ) {
                     var month = curRec.getText('custrecord_ats_mis_exp_months')
                     console.log('Month ' + month)
                     var year = curRec.getText('custrecord_ats_mis_exp_year')
@@ -176,11 +209,35 @@ define(['N/record', 'N/search'],
                         fieldId: 'custrecord_ats_exp_accounting_period',
                         value: acctPeriod
                     })
+                    var name =  curRec.getText('custrecord_ats_mis_rev_property') + ' ' + month + ' ' + year
+                    curRec.setValue({
+                        fieldId: 'name',
+                        value: name
+                    })
+
 
                 }
             }
-        }
+            if (curRec.type == 'customrecord_mis_report') {
+                console.log('Expense record')
+                if (getField == 'custrecord_ats_property' ||getField == 'custrecord_ats_year' ) {
 
+
+                    var year = curRec.getText('custrecord_ats_year')
+                    console.log('Year ' + year)
+
+
+                    var name =  curRec.getText('custrecord_ats_property') + ' '  + year
+                    curRec.setValue({
+                        fieldId: 'name',
+                        value: name
+                    })
+
+
+                }
+            }
+
+        }
         /**
          * Function to be executed when field is slaved.
          *
