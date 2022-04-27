@@ -25,7 +25,7 @@ define(['N/record', 'N/search', 'N/runtime'],
             var locationArr = [];
             var scriptObj = runtime.getCurrentScript()
             var year = scriptObj.getParameter({
-                name: 'custscript_ats_year'
+                name: 'custscript_ats__mis_year'
             })
             var yearName;
             var filters = new Array();
@@ -54,36 +54,29 @@ define(['N/record', 'N/search', 'N/runtime'],
 
                 return true
             })
-            try {
-
-                var searchAllLocation = search.load({
-                    id: 'customsearch_final_ats_sta_actuals_3'
+            log.debug('yearname ', yearName)
+            var searchAllLocation = search.load({
+                id: 'customsearch_final_ats_sta_actuals'
+            })
+            searchAllLocation.filters.push(search.createFilter({
+                name:'periodname',
+                join: 'accountingPeriod',
+                operator: 'contains',
+                values: yearName
+            }));
+            searchAllLocation.run().each(function (result) {
+                var propertyName = result.getValue({
+                    name: 'internalid',
+                    join: 'location',
+                    summary: "GROUP"
                 })
-                searchAllLocation.filters.push(search.createFilter({
-                    name: 'periodname',
-                    join: 'accountingperiod',
-                    operator: 'contains',
-                    values: yearName
-                }));
-                searchAllLocation.run().each(function (result) {
-                    var propertyName = result.getValue({
-                        name: 'internalid',
-                        join: 'location',
-                        summary: "GROUP"
-                    })
-                    log.audit('Property Name ', propertyName)
-                    locationArr.push(propertyName)
-                    return true;
-                });
+                locationArr.push(propertyName)
+                return true;
+            });
 
-                locationArr = locationArr.filter((n) => {
-                    return n != ""
-                })
-                log.audit('Get input ', locationArr)
-            } catch (e) {
-                log.error(e.message)
-            }
-            return locationArr;
+            unique = [...new Set(locationArr)];
+            log.audit('Get input ', unique)
+            return unique;
         }
 
         /**
@@ -102,18 +95,17 @@ define(['N/record', 'N/search', 'N/runtime'],
          * @param {string} mapContext.value - Value to be processed during the map stage
          * @since 2015.2
          */
-
         const map = (context) => {
             var locationWithInvoice = context.value;
             log.debug(locationWithInvoice)
             var scriptObj = runtime.getCurrentScript()
             var year = scriptObj.getParameter({
-                name: 'custscript_ats_year'
+                name: 'custscript_ats__mis_year'
             })
-            log.debug('year ', year)
+            //   log.debug('year ', year)
             var misParentId;
             var existingParentMis = []
-            // log.debug('exisiting MIS parent ',existingParentMis )
+            log.debug('exisiting MIS parent ',existingParentMis )
             var misParentSearchObj = search.load({
                 id: 'customsearch_ats_exisiting_parent'
             })
@@ -132,8 +124,7 @@ define(['N/record', 'N/search', 'N/runtime'],
                 existingParentMis.push(exisitngParent)
                 return true;
             });
-
-            // log.audit('existing MIS Rec', existingParentMis)
+            log.audit('existing MIS Rec', existingParentMis)
             function lookForAccPeriod(period) {
                 var accountPeriod;
                 var accountingperiodSearchObj = search.load({
@@ -181,163 +172,144 @@ define(['N/record', 'N/search', 'N/runtime'],
                 return misParentId
             }
 
-            function createStatistic(misParentId, month, year, location, numofdays) {
-                try {
-                    log.audit('Creating Statistic Record')
+            function createStatistic(misParentId, month, year,location, numofdays) {
+                var statisticRec = record.create({
+                    type: 'customrecord_ats_mis_statistic',
+                    isDynamic: true
+                })
+                statisticRec.setValue({
+                    fieldId: 'custrecord_ats_sta_mis_parent',
+                    value: misParentId
+                })
+                statisticRec.setValue({
+                    fieldId: 'custrecord_ats_sta_num_of_days',
+                    value: numofdays
+                })
+                statisticRec.setValue({
+                    fieldId: 'custrecord_ats_sta_property',
+                    value: location
+                })
+                statisticRec.setValue({
+                    fieldId: 'custrecord_ats_sta_month',
+                    value: month
+                })
+                statisticRec.setValue({
+                    fieldId: 'custrecord_ats_sta_year',
+                    value: year
+                })
+                var month = statisticRec.getText('custrecord_ats_sta_month')
 
-                    var statisticRec = record.create({
-                        type: 'customrecord_ats_mis_statistic',
-                        isDynamic: true
-                    })
-                    statisticRec.setValue({
-                        fieldId: 'custrecord_ats_sta_mis_parent',
-                        value: misParentId
-                    })
-                    statisticRec.setValue({
-                        fieldId: 'custrecord_ats_sta_num_of_days',
-                        value: numofdays
-                    })
-                    statisticRec.setValue({
-                        fieldId: 'custrecord_ats_sta_property',
-                        value: location
-                    })
-                    statisticRec.setValue({
-                        fieldId: 'custrecord_ats_sta_month',
-                        value: month
-                    })
-                    statisticRec.setValue({
-                        fieldId: 'custrecord_ats_sta_year',
-                        value: year
-                    })
-                    var month = statisticRec.getText('custrecord_ats_sta_month')
+                var year = statisticRec.getText('custrecord_ats_sta_year')
 
-                    var year = statisticRec.getText('custrecord_ats_sta_year')
+                var monthFinal = month.substring(0, 3);
+                var period = monthFinal + " " + year
 
-                    var monthFinal = month.substring(0, 3);
-                    var period = monthFinal + " " + year
-
-                    var acctPeriod = lookForAccPeriod(period)
-                    statisticRec.setValue({
-                        fieldId: 'custrecord_ats_sta_accounting_period',
-                        value: acctPeriod
-                    })
-                    var name = statisticRec.getText('custrecord_ats_sta_property') + ' ' + month + ' ' + year
-                    statisticRec.setValue({
-                        fieldId: 'name',
-                        value: name
-                    })
-
-                } catch (e) {
-                    log.error(e.message)
-                }
+                var acctPeriod = lookForAccPeriod(period)
+                statisticRec.setValue({
+                    fieldId: 'custrecord_ats_sta_accounting_period',
+                    value: acctPeriod
+                })
+                var name = statisticRec.getText('custrecord_ats_sta_property') + ' ' + month + ' ' + year
+                statisticRec.setValue({
+                    fieldId: 'name',
+                    value: name
+                })
                 var statisticId = statisticRec.save()
                 log.debug('Statistic record has been created ', statisticId)
             }
 
-            function createRevenue(misParentId, month, year, location, numofdays) {
-                try {
-                    log.audit('Creating Revenue Record')
+            function createRevenue(misParentId, month, year,location,numofdays) {
+                var curRec = record.create({
+                    type: 'customrecord_ats_mis_revenue',
+                    isDynamic: true
+                })
+                curRec.setValue({
+                    fieldId: 'custrecord_ats_mis_parent',
+                    value: misParentId
+                })
+                curRec.setValue({
+                    fieldId: 'custrecord_ats_mis_property',
+                    value: location
+                })
+                curRec.setValue({
+                    fieldId: 'custrecord_ats_mis_num_of_days',
+                    value: numofdays
+                })
+                curRec.setValue({
+                    fieldId: 'custrecord_ats_mis_month',
+                    value: month
+                })
+                curRec.setValue({
+                    fieldId: 'custrecord_ats_mis_year',
+                    value: year
+                })
+                var month = curRec.getText('custrecord_ats_mis_month')
 
-                    var curRec = record.create({
-                        type: 'customrecord_ats_mis_revenue',
-                        isDynamic: true
-                    })
-                    curRec.setValue({
-                        fieldId: 'custrecord_ats_mis_parent',
-                        value: misParentId
-                    })
-                    curRec.setValue({
-                        fieldId: 'custrecord_ats_mis_property',
-                        value: location
-                    })
-                    curRec.setValue({
-                        fieldId: 'custrecord_ats_mis_num_of_days',
-                        value: numofdays
-                    })
-                    curRec.setValue({
-                        fieldId: 'custrecord_ats_mis_month',
-                        value: month
-                    })
-                    curRec.setValue({
-                        fieldId: 'custrecord_ats_mis_year',
-                        value: year
-                    })
-                    var month = curRec.getText('custrecord_ats_mis_month')
+                var year = curRec.getText('custrecord_ats_mis_year')
 
-                    var year = curRec.getText('custrecord_ats_mis_year')
+                var monthFinal = month.substring(0, 3);
+                var period = monthFinal + " " + year
 
-                    var monthFinal = month.substring(0, 3);
-                    var period = monthFinal + " " + year
-
-                    var acctPeriod = lookForAccPeriod(period)
-                    curRec.setValue({
-                        fieldId: 'custrecord_ats_accounting_period',
-                        value: acctPeriod
-                    })
-                    var name = curRec.getText('custrecord_ats_mis_property') + ' ' + month + ' ' + year
-                    curRec.setValue({
-                        fieldId: 'name',
-                        value: name
-                    })
-
-                } catch (e) {
-                    log.error(e.message)
-                }
+                var acctPeriod = lookForAccPeriod(period)
+                curRec.setValue({
+                    fieldId: 'custrecord_ats_accounting_period',
+                    value: acctPeriod
+                })
+                var name = curRec.getText('custrecord_ats_mis_property') + ' ' + month + ' ' + year
+                curRec.setValue({
+                    fieldId: 'name',
+                    value: name
+                })
                 var recIdRevenue = curRec.save()
                 log.debug('Revenue created', recIdRevenue)
+
             }
 
-            function createExpense(misParentId, month, year, location, numofdays) {
-                try {
-                    log.audit('Creating Expense Record')
+            function createExpense(misParentId, month, year,location, numofdays) {
+                var curRec = record.create({
+                    type: 'customrecord_ats_mis_expense',
+                    isDynamic: true
+                })
+                curRec.setValue({
+                    fieldId: 'custrecord_ats_mis_rev_parent',
+                    value: misParentId
+                })
+                curRec.setValue({
+                    fieldId: 'custrecord_ats_mis_rev_property',
+                    value: location
+                })
+                curRec.setValue({
+                    fieldId: 'custrecord_ats_mis_exp_num_of_days',
+                    value: numofdays
+                })
+                curRec.setValue({
+                    fieldId: 'custrecord_ats_mis_exp_months',
+                    value: month
+                })
+                curRec.setValue({
+                    fieldId: 'custrecord_ats_mis_exp_year',
+                    value: year
+                })
+                var month = curRec.getText('custrecord_ats_mis_exp_months')
 
-                    var curRec = record.create({
-                        type: 'customrecord_ats_mis_expense',
-                        isDynamic: true
-                    })
-                    curRec.setValue({
-                        fieldId: 'custrecord_ats_mis_rev_parent',
-                        value: misParentId
-                    })
-                    curRec.setValue({
-                        fieldId: 'custrecord_ats_mis_rev_property',
-                        value: location
-                    })
-                    curRec.setValue({
-                        fieldId: 'custrecord_ats_mis_exp_num_of_days',
-                        value: numofdays
-                    })
-                    curRec.setValue({
-                        fieldId: 'custrecord_ats_mis_exp_months',
-                        value: month
-                    })
-                    curRec.setValue({
-                        fieldId: 'custrecord_ats_mis_exp_year',
-                        value: year
-                    })
-                    var month = curRec.getText('custrecord_ats_mis_exp_months')
+                var year = curRec.getText('custrecord_ats_mis_exp_year')
 
-                    var year = curRec.getText('custrecord_ats_mis_exp_year')
+                var monthFinal = month.substring(0, 3);
+                var period = monthFinal + " " + year
 
-                    var monthFinal = month.substring(0, 3);
-                    var period = monthFinal + " " + year
-
-                    var acctPeriod = lookForAccPeriod(period)
-                    curRec.setValue({
-                        fieldId: 'custrecord_ats_exp_accounting_period',
-                        value: acctPeriod
-                    })
-                    var name = curRec.getText('custrecord_ats_mis_rev_property') + ' ' + month + ' ' + year
-                    curRec.setValue({
-                        fieldId: 'name',
-                        value: name
-                    })
-
-                } catch (e) {
-                    log.error(e.message)
-                }
+                var acctPeriod = lookForAccPeriod(period)
+                curRec.setValue({
+                    fieldId: 'custrecord_ats_exp_accounting_period',
+                    value: acctPeriod
+                })
+                var name = curRec.getText('custrecord_ats_mis_rev_property') + ' ' + month + ' ' + year
+                curRec.setValue({
+                    fieldId: 'name',
+                    value: name
+                })
                 var expenseId = curRec.save()
                 log.debug('Revenue created', expenseId)
+
             }
 
             existingParentMis.includes(locationWithInvoice)
@@ -345,12 +317,12 @@ define(['N/record', 'N/search', 'N/runtime'],
             log.debug('is existing', isExisting + ' ' + locationWithInvoice)
             if (isExisting == false) {
                 log.audit('creating mis record')
-                misParentId = createMISParent(locationWithInvoice, year)
+                misParentId = createMISParent(locationWithInvoice,year)
                 log.debug('Mis Parent created', misParentId)
                 if (misParentId) {
                     for (var i = 1; i <= 12; i++) {
                         var numofdays;
-                        switch (parseInt(i)) {
+                        switch(parseInt(i)) {
                             case 1:
                                 numofdays = 31
                                 break;
@@ -387,21 +359,20 @@ define(['N/record', 'N/search', 'N/runtime'],
                             // code block
                         }
                         log.debug('Num of days', numofdays)
-                        if (numofdays) {
-                            log.audit('Creating Sub Record','misParentId ' + misParentId + ' ' + year + ' ' + locationWithInvoice )
-                            createStatistic(misParentId, i, year, locationWithInvoice, numofdays)
+                        if(numofdays){
+                            createStatistic(misParentId, i, year , locationWithInvoice,numofdays)
                             createRevenue(misParentId, i, year, locationWithInvoice, numofdays)
                             createExpense(misParentId, i, year, locationWithInvoice, numofdays)
                         }
 
 
+
                     }
                 }
-            } else {
+            }else{
                 log.audit('This location is existing already ', locationWithInvoice)
             }
         }
-
         /**
          * Defines the function that is executed when the reduce entry point is triggered. This entry point is triggered
          * automatically when the associated map stage is complete. This function is applied to each group in the provided context.

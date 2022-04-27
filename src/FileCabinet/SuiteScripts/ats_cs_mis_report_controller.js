@@ -130,11 +130,15 @@ define(['N/url', 'N/currentRecord', 'N/search', 'N/format'],
             var year;
             var month;
             var property;
+            var yearVal
 
             month = objRecord.getText({
                 fieldId: 'custpage_month'
             })
             year = objRecord.getText({
+                fieldId: 'custpage_year'
+            })
+            yearVal = objRecord.getValue({
                 fieldId: 'custpage_year'
             })
             location = objRecord.getValue({
@@ -146,20 +150,31 @@ define(['N/url', 'N/currentRecord', 'N/search', 'N/format'],
 
 
 
+            var currInstanceChecker = search.load({id:'customsearch577'});
+            var checkInstCount = currInstanceChecker.runPaged().count;
             var objParametersToProcess = {
                 "year": encodeURIComponent(year),
                 "month": encodeURIComponent(month),
                 "property": encodeURIComponent(location),
                 "location": encodeURIComponent(property),
+                "yearVal" : encodeURIComponent(yearVal),
                 "searchFilter": 'T'
             };
 
-            console.log(objParametersToProcess)
-            document.location = url.resolveScript({
-                scriptId: 'customscriptats_sl_mis_report',
-                deploymentId: 'customdeployats_sl_mis_report',
-                params: objParametersToProcess
-            })
+            if(checkInstCount){
+                alert('There is a current instance of search that is runnning on the backend. Kindly wait for a few minutes...');
+                return;
+            } else{
+                alert('Report will be sent to your email address. Please wait.')
+                document.location = url.resolveScript({
+                    scriptId: 'customscriptats_sl_mis_report',
+                    deploymentId: 'customdeployats_sl_mis_report',
+                    params: objParametersToProcess
+                })
+
+            }
+
+
 
         }
 

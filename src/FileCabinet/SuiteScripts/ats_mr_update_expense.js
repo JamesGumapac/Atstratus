@@ -177,6 +177,7 @@ define(['N/record', 'N/search'],
 
                     var amount = result.getValue({
                         name: 'amount',
+                        join: "accountingTransaction",
                         summary: "SUM"
                     })
 

@@ -59,7 +59,7 @@ define(['N/record', 'N/search'],
 
 
             var accountPeriod = searchResult.values.custrecord_ats_accounting_period.text
-         //   log.audit(`MIS ID:  ${id} | PROPERTY: ${property} | ACCOUNTING PERIOD: ${accountPeriod}`)
+            log.audit(`MIS ID:  ${id} | PROPERTY: ${property} | ACCOUNTING PERIOD: ${accountPeriod}`)
 
             var periodFinal = accountPeriod.substring(accountPeriod.length - 8, accountPeriod.length)
             var invoiceSearchObj = search.load({
@@ -98,6 +98,7 @@ define(['N/record', 'N/search'],
 
                     var amount = result.getValue({
                         name: 'amount',
+                        join: 'accountingTransaction',
                         summary: "SUM"
                     })
 
@@ -107,7 +108,7 @@ define(['N/record', 'N/search'],
                         join: 'account',
                         summary: 'GROUP'
                     })
-                    log.debug(`APeriod: ${accountingPeriod} | revCategory: ${revCategory} | amount: ${amount}`)
+                    log.debug(`Property: ${property} | APeriod: ${accountingPeriod} | revCategory: ${revCategory} | amount: ${amount}`)
 
 
 
@@ -299,7 +300,7 @@ define(['N/record', 'N/search'],
                 }
 
 
-                log.debug(`Extras and Rooms Total`, `${roomsActualTotal} , ${extrasTotal}`  )
+               log.debug(`Extras and Rooms Total`, `${roomsActualTotal} , ${extrasTotal}`  )
                 if (misRec) {
                     try {
                         staId = misRec.save({
@@ -311,7 +312,7 @@ define(['N/record', 'N/search'],
 
 
                 }
-                log.audit(' Statisitc Record updated ', staId)
+               log.audit(' Revenue Record updated ', staId)
             }
 
 
